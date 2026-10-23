@@ -1,36 +1,36 @@
-# Backup Linux
+# Linux Backup
 
-Aplicación de escritorio para crear copias de seguridad con GTK 4. La ventana funciona en la sesión normal del usuario; PolicyKit eleva solamente las copias y las tareas administrativas.
+A desktop application for creating backups using GTK 4. The application window runs in the regular user session, while PolicyKit elevates privileges only for backup operations and administrative tasks.
 
-La interfaz detecta el idioma configurado en la sesión de Linux. Actualmente muestra español cuando el locale empieza por `es` e inglés para los demás idiomas.
+The interface detects the language configured in the Linux session. It currently displays Spanish when the locale starts with `es` and English for all other languages.
 
-## Instalación sencilla
+## Easy Installation
 
-Descarga el archivo único `BackupLinux-Installer.run`, marca la opción **Permitir ejecutar el archivo como programa** en sus propiedades si el navegador no lo hizo, y ábrelo. El instalador:
+Download the single file `BackupLinux-Installer.run`, enable **Allow executing file as a program** in its properties if your browser has not already done so, and open it. The installer:
 
-- comprueba GTK 4, PyGObject, Python 3 y las herramientas de backup, permisos y programación;
-- ofrece instalar dependencias con el gestor de paquetes detectado (Debian/Ubuntu, Fedora, Arch o openSUSE), solicitando autorización administrativa;
-- instala la aplicación en `~/.local/opt/backup-linux`, sin requerir instalar la ventana como root;
-- crea el acceso en el menú de aplicaciones y el lanzador `~/.local/bin/backup-desktop`;
-- incluye un desinstalador en el menú de aplicaciones que elimina la aplicación, perfiles, correo y programación. Las copias de seguridad se conservan.
+- Checks for GTK 4, PyGObject, Python 3, and the required backup, permission, and scheduling tools.
+- Offers to install dependencies using the detected package manager (Debian/Ubuntu, Fedora, Arch, or openSUSE), requesting administrative authorization.
+- Installs the application in `~/.local/opt/backup-linux`, without requiring the application window to run as root.
+- Creates an entry in the applications menu and the launcher `~/.local/bin/backup-desktop`.
+- Includes an uninstaller in the applications menu that removes the application, profiles, email settings, and scheduled tasks. Backups are preserved.
 
-El instalador descargado también puede iniciar la desinstalación con `--uninstall`.
+The downloaded installer can also start the uninstallation process using `--uninstall`.
 
-## Crear el instalador
+## Building the Installer
 
-Desde esta carpeta, ejecuta `./build-installer.sh`. Genera `BackupLinux-Installer.run`, el único archivo que se distribuye a los usuarios. Incluye los fuentes de la aplicación y el instalador, pero descarga las dependencias de los repositorios de la distribución para mantener GTK, Python y PolicyKit compatibles con el sistema.
+From this directory, run `./build-installer.sh`. It generates `BackupLinux-Installer.run`, the single file distributed to users. It includes the application source code and installer, but downloads dependencies from the distribution's repositories to ensure compatibility between GTK, Python, PolicyKit, and the host system.
 
-## Uso
+## Usage
 
-1. Agrega las carpetas de origen y selecciona o crea una carpeta destino.
-2. Elige `rsync` para copias incrementales o `tar` para un archivo comprimido.
-3. Pulsa **Iniciar backup** y autoriza la operación cuando PolicyKit lo solicite.
-4. Consulta el progreso y el registro en vivo. Puedes cancelar la ejecución.
-5. En **Programación…**, elige cada N horas, diariamente o semanalmente. Se crea un timer de sistema que puede ejecutarse aunque la ventana esté cerrada.
-6. En **Correo / SMTP…**, configura SMTP local, externo o `sendmail/msmtp` y las preferencias de envío de logs.
+1. Add the source folders and select or create a destination folder.
+2. Choose `rsync` for incremental backups or `tar` to create a compressed archive.
+3. Click **Start Backup** and authorize the operation when prompted by PolicyKit.
+4. Monitor progress and view the live log. You can cancel the operation at any time.
+5. Under **Scheduling…**, choose an interval of every N hours, daily, or weekly. A system timer is created, allowing backups to run even when the application window is closed.
+6. Under **Email / SMTP…**, configure a local or external SMTP server, or `sendmail/msmtp`, and set your log delivery preferences.
 
-Los perfiles se guardan en `$XDG_CONFIG_HOME/backup-desktop/` o, por defecto, en `~/.config/backup-desktop/`. La aplicación restaura el último perfil utilizado.
+Profiles are stored in `$XDG_CONFIG_HOME/backup-desktop/` or, by default, in `~/.config/backup-desktop/`. The application restores the last-used profile.
 
-## Requisitos técnicos
+## Technical Requirements
 
-Linux de escritorio con GTK 4, Python 3 y PyGObject. Se recomienda systemd y un agente gráfico de PolicyKit. El instalador detecta e intenta instalar también `rsync`, `tar`, `pkexec`, `systemctl` y `curl`. La programación requiere systemd; SMTP directo usa curl.
+A Linux desktop environment with GTK 4, Python 3, and PyGObject. systemd and a graphical PolicyKit authentication agent are recommended. The installer detects and attempts to install `rsync`, `tar`, `pkexec`, `systemctl`, and `curl` as well. Scheduling requires systemd; direct SMTP delivery uses curl.
