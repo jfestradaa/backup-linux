@@ -1,6 +1,6 @@
 Linux Backup
 
-A desktop application in Spanish for creating backups using GTK 4. The application window runs in the regular user session, while PolicyKit elevates privileges only for backup operations and administrative tasks.
+A desktop application in Spanish for creating backups using GTK 4. The application window runs in the regular user session is designed to save your personal data and does not support complete system recovery, while PolicyKit elevates privileges only for backup operations and administrative tasks.
 
 <img width="2041" height="1053" alt="image" src="https://github.com/user-attachments/assets/368ca611-221d-4832-b0aa-b20366b9034b" />
 
