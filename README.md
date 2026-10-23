@@ -1,8 +1,8 @@
 # Linux Backup
 
 A desktop application for creating backups using GTK 4. The application window runs in the regular user session, while PolicyKit elevates privileges only for backup operations and administrative tasks.
+<img width="2055" height="1126" alt="image" src="https://github.com/user-attachments/assets/5aa74852-e0b8-44d0-8182-4b3421de21bf" />
 
-<img width="2041" height="1053" alt="image" src="https://github.com/user-attachments/assets/42301af5-3149-489d-b650-9f2900719ef3" />
 
 
 The interface detects the language configured in the Linux session. It currently displays Spanish when the locale starts with `es` and English for all other languages.
