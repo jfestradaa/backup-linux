@@ -2,6 +2,10 @@ Linux Backup
 
 A desktop application in Spanish for creating backups using GTK 4. The application window runs in the regular user session, while PolicyKit elevates privileges only for backup operations and administrative tasks.
 
+<img width="2041" height="1053" alt="image" src="https://github.com/user-attachments/assets/368ca611-221d-4832-b0aa-b20366b9034b" />
+
+
+
 Easy Installation
 
 Download the single file BackupLinux-Installer.run, enable Allow executing file as a program in its properties if your browser has not already done so, and open it. The installer:
