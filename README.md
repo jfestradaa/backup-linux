@@ -21,7 +21,7 @@ The downloaded installer can also start the uninstallation process using `--unin
 
 ## Building the Installer
 
-From this directory, run `./build-installer.sh`. It generates `BackupLinux-Installer.run`, the single file distributed to users. It includes the application source code and installer, but downloads dependencies from the distribution's repositories to ensure compatibility between GTK, Python, PolicyKit, and the host system.
+From the directory, run `./build-installer.sh`. It generates `BackupLinux-Installer.run`, the single file distributed to users. It includes the application source code and installer, but downloads dependencies from the distribution's repositories to ensure compatibility between GTK, Python, PolicyKit, and the host system.
 
 ## Usage
 
