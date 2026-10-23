@@ -2,6 +2,8 @@
 
 Aplicación de escritorio en español para crear copias de seguridad con GTK 4. La ventana funciona en la sesión normal del usuario; PolicyKit eleva solamente las copias y las tareas administrativas.
 
+La interfaz detecta el idioma configurado en la sesión de Linux. Actualmente muestra español cuando el locale empieza por `es` e inglés para los demás idiomas.
+
 ## Instalación sencilla
 
 Descarga el archivo único `BackupLinux-Installer.run`, marca la opción **Permitir ejecutar el archivo como programa** en sus propiedades si el navegador no lo hizo, y ábrelo. El instalador:

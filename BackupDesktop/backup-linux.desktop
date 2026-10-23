@@ -1,7 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=Backup Linux
-Comment=Crear y gestionar copias de seguridad
+Comment=Create and manage backups
+Comment[es]=Crear y gestionar copias de seguridad
 Exec=backup-desktop
 Icon=backup-linux
 Terminal=false

@@ -6,7 +6,7 @@ OUTPUT="$ROOT/BackupLinux-Installer.run"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-FILES=(backup-desktop backup-linux.desktop backup-linux.svg backup.sh backup_gtk.py backup_job.py uninstall-backup-linux)
+FILES=(backup-desktop backup-linux.desktop backup-linux.svg backup.sh backup_gtk.py backup_job.py i18n.py uninstall-backup-linux)
 for file in "${FILES[@]}"; do
     [[ -f "$ROOT/$file" ]] || { printf 'Falta el archivo requerido: %s\n' "$ROOT/$file" >&2; exit 1; }
 done

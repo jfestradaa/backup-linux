@@ -182,7 +182,8 @@ EOF
 [Desktop Entry]
 Type=Application
 Name=Backup Linux
-Comment=Crear y gestionar copias de seguridad
+Comment=Create and manage backups
+Comment[es]=Crear y gestionar copias de seguridad
 Exec="$BIN_DIR/backup-desktop"
 Icon=backup-linux
 Terminal=false
@@ -194,8 +195,10 @@ EOF
     cat > "$APP_MENU_DIR/backup-linux-uninstall.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Desinstalar Backup Linux
-Comment=Eliminar Backup Linux y toda su configuración
+Name=Uninstall Backup Linux
+Name[es]=Desinstalar Backup Linux
+Comment=Remove Backup Linux and all its settings
+Comment[es]=Eliminar Backup Linux y toda su configuración
 Exec="$BIN_DIR/uninstall-backup-linux"
 Icon=backup-linux
 Terminal=false

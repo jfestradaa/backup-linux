@@ -8,14 +8,49 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
+from i18n import tr
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gio, GLib, Gtk, Pango
 
+
+def _label(*args, **kwargs):
+    if isinstance(kwargs.get("label"), str):
+        kwargs["label"] = tr(kwargs["label"])
+    return Gtk.Label(*args, **kwargs)
+
+
+def _button(*args, **kwargs):
+    if isinstance(kwargs.get("label"), str):
+        kwargs["label"] = tr(kwargs["label"])
+    return Gtk.Button(*args, **kwargs)
+
+
+def _check_button(*args, **kwargs):
+    if isinstance(kwargs.get("label"), str):
+        kwargs["label"] = tr(kwargs["label"])
+    return Gtk.CheckButton(*args, **kwargs)
+
+
+def _frame(*args, **kwargs):
+    if isinstance(kwargs.get("label"), str):
+        kwargs["label"] = tr(kwargs["label"])
+    return Gtk.Frame(*args, **kwargs)
+
+
+def _dialog(*args, **kwargs):
+    if isinstance(kwargs.get("title"), str):
+        kwargs["title"] = tr(kwargs["title"])
+    return Gtk.Dialog(*args, **kwargs)
+
+
+def _dropdown(strings):
+    return Gtk.DropDown.new_from_strings([tr(value) for value in strings])
+
 APP_ID = "org.codex.BackupLinux"
-APP_NAME = "Backup Linux"
+APP_NAME = tr("Backup Linux")
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "backup-desktop"
 PROFILES = CONFIG_DIR / "profiles.json"
 LAST_PROFILE = CONFIG_DIR / "last-profile"
@@ -108,7 +143,7 @@ class BackupWindow(Gtk.ApplicationWindow):
                     self.profile_dropdown.set_selected(i)
                     break
             self.apply_profile(self.profiles[name])
-            self.status.set_text(f"Última configuración cargada: {name}")
+            self.set_status(f"Última configuración cargada: {name}")
 
     def remember_last_profile(self, name):
         CONFIG_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -138,30 +173,30 @@ class BackupWindow(Gtk.ApplicationWindow):
 
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         root.append(header)
-        title = Gtk.Label(label=APP_NAME)
+        title = _label(label=APP_NAME)
         title.add_css_class("title-1")
         title.set_xalign(0)
         title.set_hexpand(True)
         header.append(title)
-        header.append(Gtk.Label(label="Perfil"))
+        header.append(_label(label="Perfil"))
         self.profile_model = Gtk.StringList.new([])
         self.profile_dropdown = Gtk.DropDown(model=self.profile_model)
         self.profile_dropdown.set_size_request(190, -1)
         header.append(self.profile_dropdown)
-        load_btn = Gtk.Button(label="Cargar perfil")
+        load_btn = _button(label="Cargar perfil")
         load_btn.connect("clicked", self.load_profile)
         header.append(load_btn)
-        save_btn = Gtk.Button(label="Guardar como…")
+        save_btn = _button(label="Guardar como…")
         save_btn.connect("clicked", self.ask_save_profile)
         header.append(save_btn)
-        mail_btn = Gtk.Button(label="Correo / SMTP…")
+        mail_btn = _button(label="Correo / SMTP…")
         mail_btn.connect("clicked", self.open_mail_settings)
         header.append(mail_btn)
-        schedule_btn = Gtk.Button(label="Programación…")
+        schedule_btn = _button(label="Programación…")
         schedule_btn.connect("clicked", self.open_schedule_settings)
         header.append(schedule_btn)
 
-        sources_frame = Gtk.Frame(label="Carpetas de origen")
+        sources_frame = _frame(label="Carpetas de origen")
         sources_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         sources_box.set_margin_top(8)
         sources_box.set_margin_bottom(10)
@@ -180,17 +215,17 @@ class BackupWindow(Gtk.ApplicationWindow):
         sources_box.append(scroller)
         source_buttons = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         sources_box.append(source_buttons)
-        add_btn = Gtk.Button(label="Agregar carpeta…")
+        add_btn = _button(label="Agregar carpeta…")
         add_btn.connect("clicked", self.choose_source)
         source_buttons.append(add_btn)
-        remove_btn = Gtk.Button(label="Quitar seleccionadas")
+        remove_btn = _button(label="Quitar seleccionadas")
         remove_btn.connect("clicked", self.remove_sources)
         source_buttons.append(remove_btn)
-        clear_btn = Gtk.Button(label="Vaciar lista")
+        clear_btn = _button(label="Vaciar lista")
         clear_btn.connect("clicked", self.clear_sources)
         source_buttons.append(clear_btn)
 
-        options = Gtk.Frame(label="Destino y opciones")
+        options = _frame(label="Destino y opciones")
         grid = Gtk.Grid(column_spacing=10, row_spacing=9)
         grid.set_margin_top(12)
         grid.set_margin_bottom(12)
@@ -198,32 +233,32 @@ class BackupWindow(Gtk.ApplicationWindow):
         grid.set_margin_end(12)
         options.set_child(grid)
         root.append(options)
-        grid.attach(Gtk.Label(label="Destino", xalign=0), 0, 0, 1, 1)
+        grid.attach(_label(label="Destino", xalign=0), 0, 0, 1, 1)
         self.destination = Gtk.Entry()
         self.destination.set_hexpand(True)
-        self.destination.set_placeholder_text("Ruta donde se guardarán los backups")
+        self.destination.set_placeholder_text(tr("Ruta donde se guardarán los backups"))
         grid.attach(self.destination, 1, 0, 2, 1)
-        browse_dest = Gtk.Button(label="Examinar…")
+        browse_dest = _button(label="Examinar…")
         browse_dest.connect("clicked", self.choose_destination)
         grid.attach(browse_dest, 3, 0, 1, 1)
-        create_dest = Gtk.Button(label="Crear carpeta…")
+        create_dest = _button(label="Crear carpeta…")
         create_dest.connect("clicked", self.create_destination_dialog)
         grid.attach(create_dest, 4, 0, 1, 1)
-        grid.attach(Gtk.Label(label="Modo", xalign=0), 0, 1, 1, 1)
-        self.mode = Gtk.DropDown.new_from_strings(["rsync", "tar"])
+        grid.attach(_label(label="Modo", xalign=0), 0, 1, 1, 1)
+        self.mode = _dropdown(["rsync", "tar"])
         grid.attach(self.mode, 1, 1, 1, 1)
-        mode_help = Gtk.Label(label="rsync: incremental y navegable · tar: archivo .tar.gz")
+        mode_help = _label(label="rsync: incremental y navegable · tar: archivo .tar.gz")
         mode_help.set_xalign(0)
         mode_help.add_css_class("dim-label")
         grid.attach(mode_help, 2, 1, 2, 1)
-        self.snapshot = Gtk.CheckButton(label="Intentar snapshot LVM/btrfs (requiere soporte y permisos del sistema)")
+        self.snapshot = _check_button(label="Intentar snapshot LVM/btrfs (requiere soporte y permisos del sistema)")
         grid.attach(self.snapshot, 0, 2, 4, 1)
-        grid.attach(Gtk.Label(label="Retención (días; 0 conserva todos)", xalign=0), 0, 3, 1, 1)
+        grid.attach(_label(label="Retención (días; 0 conserva todos)", xalign=0), 0, 3, 1, 1)
         self.retention = Gtk.SpinButton.new_with_range(0, 36500, 1)
         self.retention.set_numeric(True)
         self.retention.set_value(0)
         grid.attach(self.retention, 1, 3, 1, 1)
-        grid.attach(Gtk.Label(label="Exclusiones (un patrón por línea)", xalign=0, yalign=0), 0, 4, 1, 1)
+        grid.attach(_label(label="Exclusiones (un patrón por línea)", xalign=0, yalign=0), 0, 4, 1, 1)
         self.excludes = Gtk.TextView()
         self.excludes.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
         self.excludes.get_buffer().set_text(DEFAULT_EXCLUDES)
@@ -232,7 +267,7 @@ class BackupWindow(Gtk.ApplicationWindow):
         exclude_scroll.set_child(self.excludes)
         grid.attach(exclude_scroll, 1, 4, 3, 1)
 
-        log_frame = Gtk.Frame(label="Registro de ejecución")
+        log_frame = _frame(label="Registro de ejecución")
         log_frame.set_vexpand(True)
         root.append(log_frame)
         self.log_view = Gtk.TextView()
@@ -248,22 +283,22 @@ class BackupWindow(Gtk.ApplicationWindow):
 
         footer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         root.append(footer)
-        self.status = Gtk.Label(label="Listo", xalign=0)
+        self.status = _label(label="Listo", xalign=0)
         self.status.set_hexpand(True)
         footer.append(self.status)
         self.progress = Gtk.ProgressBar()
         self.progress.set_size_request(190, -1)
         self.progress.set_show_text(True)
         footer.append(self.progress)
-        self.run_button = Gtk.Button(label="Iniciar backup")
+        self.run_button = _button(label="Iniciar backup")
         self.run_button.add_css_class("suggested-action")
         self.run_button.connect("clicked", self.start_backup)
         footer.append(self.run_button)
-        self.cancel_button = Gtk.Button(label="Cancelar")
+        self.cancel_button = _button(label="Cancelar")
         self.cancel_button.set_sensitive(False)
         self.cancel_button.connect("clicked", self.cancel_backup)
         footer.append(self.cancel_button)
-        exit_button = Gtk.Button(label="Salir")
+        exit_button = _button(label="Salir")
         exit_button.connect("clicked", self.exit_app)
         footer.append(exit_button)
 
@@ -276,7 +311,8 @@ class BackupWindow(Gtk.ApplicationWindow):
         return item.get_string() if item else ""
 
     def choose_directory(self, title, callback):
-        chooser = Gtk.FileChooserNative.new(title, self, Gtk.FileChooserAction.SELECT_FOLDER, "Seleccionar", "Cancelar")
+        chooser = Gtk.FileChooserNative.new(tr(title), self, Gtk.FileChooserAction.SELECT_FOLDER,
+                                            tr("Seleccionar"), tr("Cancelar"))
         chooser.connect("response", lambda dialog, response: self.on_directory_chosen(dialog, response, callback))
         chooser.show()
 
@@ -303,7 +339,7 @@ class BackupWindow(Gtk.ApplicationWindow):
             child = next_child
         for path in self.sources:
             row = Gtk.ListBoxRow()
-            label = Gtk.Label(label=path, xalign=0)
+            label = _label(label=path, xalign=0)
             label.set_margin_top(7)
             label.set_margin_bottom(7)
             label.set_margin_start(9)
@@ -324,11 +360,11 @@ class BackupWindow(Gtk.ApplicationWindow):
         self.render_sources()
 
     def choose_destination(self, _button):
-        dialog = Gtk.Dialog(title="Seleccionar destino", transient_for=self, modal=True)
+        dialog = _dialog(title="Seleccionar destino", transient_for=self, modal=True)
         dialog.set_default_size(850, 560)
-        dialog.add_button("Cancelar", Gtk.ResponseType.CANCEL)
-        dialog.add_button("Nueva carpeta…", 1001)
-        dialog.add_button("Seleccionar", Gtk.ResponseType.ACCEPT)
+        dialog.add_button(tr("Cancelar"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(tr("Nueva carpeta…"), 1001)
+        dialog.add_button(tr("Seleccionar"), Gtk.ResponseType.ACCEPT)
         dialog.set_default_response(Gtk.ResponseType.ACCEPT)
         chooser = Gtk.FileChooserWidget.new(Gtk.FileChooserAction.SELECT_FOLDER)
         chooser.set_hexpand(True)
@@ -354,9 +390,9 @@ class BackupWindow(Gtk.ApplicationWindow):
     def prompt_new_destination_folder(self, chooser_dialog, chooser):
         current = chooser.get_current_folder()
         parent = Path(current.get_path()) if current and current.get_path() else Path.home()
-        dialog = Gtk.Dialog(title="Crear carpeta", transient_for=chooser_dialog, modal=True)
-        dialog.add_button("Cancelar", Gtk.ResponseType.CANCEL)
-        dialog.add_button("Crear", Gtk.ResponseType.ACCEPT)
+        dialog = _dialog(title="Crear carpeta", transient_for=chooser_dialog, modal=True)
+        dialog.add_button(tr("Cancelar"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(tr("Crear"), Gtk.ResponseType.ACCEPT)
         dialog.set_default_response(Gtk.ResponseType.ACCEPT)
         box = dialog.get_content_area()
         box.set_spacing(8)
@@ -364,9 +400,9 @@ class BackupWindow(Gtk.ApplicationWindow):
         box.set_margin_bottom(14)
         box.set_margin_start(14)
         box.set_margin_end(14)
-        box.append(Gtk.Label(label=f"Nueva carpeta dentro de:\n{parent}", xalign=0))
+        box.append(_label(label=f"Nueva carpeta dentro de:\n{parent}", xalign=0))
         entry = Gtk.Entry()
-        entry.set_placeholder_text("Nombre de la carpeta")
+        entry.set_placeholder_text(tr("Nombre de la carpeta"))
         entry.set_activates_default(True)
         box.append(entry)
         dialog.connect("response", self.new_destination_folder_response, chooser_dialog, chooser, parent, entry)
@@ -395,9 +431,9 @@ class BackupWindow(Gtk.ApplicationWindow):
             self.show_message("No se pudo crear la carpeta", f"{path}\n\n{error}", Gtk.MessageType.ERROR)
 
     def create_destination_dialog(self, _button):
-        dialog = Gtk.Dialog(title="Crear carpeta de destino", transient_for=self, modal=True)
-        dialog.add_button("Cancelar", Gtk.ResponseType.CANCEL)
-        dialog.add_button("Crear carpeta", Gtk.ResponseType.ACCEPT)
+        dialog = _dialog(title="Crear carpeta de destino", transient_for=self, modal=True)
+        dialog.add_button(tr("Cancelar"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(tr("Crear carpeta"), Gtk.ResponseType.ACCEPT)
         dialog.set_default_response(Gtk.ResponseType.ACCEPT)
         box = dialog.get_content_area()
         box.set_spacing(8)
@@ -405,10 +441,10 @@ class BackupWindow(Gtk.ApplicationWindow):
         box.set_margin_bottom(14)
         box.set_margin_start(14)
         box.set_margin_end(14)
-        box.append(Gtk.Label(label="Escribe la ruta completa que quieres crear:", xalign=0))
+        box.append(_label(label="Escribe la ruta completa que quieres crear:", xalign=0))
         entry = Gtk.Entry()
         entry.set_hexpand(True)
-        entry.set_placeholder_text("/ruta/al/destino")
+        entry.set_placeholder_text(tr("/ruta/al/destino"))
         entry.set_text(self.destination.get_text().strip())
         entry.set_activates_default(True)
         box.append(entry)
@@ -428,7 +464,7 @@ class BackupWindow(Gtk.ApplicationWindow):
             path.mkdir(parents=True, exist_ok=True, mode=0o700)
             self.probe_destination(path)
             self.destination.set_text(str(path))
-            self.status.set_text("Carpeta de destino creada y escribible")
+            self.set_status("Carpeta de destino creada y escribible")
         except PermissionError:
             self.offer_destination_access(path, create=True, continuation=lambda: self.destination.set_text(str(path)))
         except OSError as error:
@@ -460,7 +496,7 @@ class BackupWindow(Gtk.ApplicationWindow):
                     raise RuntimeError((result.stderr or result.stdout).strip() or "No se pudo crear la carpeta con permisos administrativos.")
             self.probe_destination(path)
             continuation()
-            self.status.set_text("Destino creado con autorización administrativa")
+            self.set_status("Destino creado con autorización administrativa")
         except (OSError, subprocess.SubprocessError, RuntimeError) as error:
             self.show_message("No se pudo preparar el destino", str(error), Gtk.MessageType.ERROR)
 
@@ -478,12 +514,12 @@ class BackupWindow(Gtk.ApplicationWindow):
                 "excludes": self.get_excludes()}
 
     def ask_save_profile(self, _button):
-        dialog = Gtk.Dialog(title="Guardar perfil", transient_for=self, modal=True)
-        dialog.add_button("Cancelar", Gtk.ResponseType.CANCEL)
-        dialog.add_button("Guardar", Gtk.ResponseType.ACCEPT)
+        dialog = _dialog(title="Guardar perfil", transient_for=self, modal=True)
+        dialog.add_button(tr("Cancelar"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(tr("Guardar"), Gtk.ResponseType.ACCEPT)
         dialog.set_default_response(Gtk.ResponseType.ACCEPT)
         entry = Gtk.Entry()
-        entry.set_placeholder_text("Nombre del perfil")
+        entry.set_placeholder_text(tr("Nombre del perfil"))
         current = self.selected_profile_name()
         if current:
             entry.set_text(current)
@@ -494,7 +530,7 @@ class BackupWindow(Gtk.ApplicationWindow):
         box.set_margin_bottom(12)
         box.set_margin_start(12)
         box.set_margin_end(12)
-        box.append(Gtk.Label(label="Guardar la configuración actual con este nombre:", xalign=0))
+        box.append(_label(label="Guardar la configuración actual con este nombre:", xalign=0))
         box.append(entry)
         dialog.connect("response", self.save_profile_response, entry)
         dialog.present()
@@ -515,7 +551,7 @@ class BackupWindow(Gtk.ApplicationWindow):
             if self.profile_model.get_string(i) == name:
                 self.profile_dropdown.set_selected(i)
                 break
-        self.status.set_text(f"Perfil guardado: {name}")
+        self.set_status(f"Perfil guardado: {name}")
 
     def load_profile(self, _button):
         name = self.selected_profile_name()
@@ -542,7 +578,7 @@ class BackupWindow(Gtk.ApplicationWindow):
         except (OSError, TypeError, ValueError, AttributeError) as error:
             self.show_message("No se pudo cargar el perfil", f"El perfil «{name}» no contiene una configuración válida.\n\n{error}", Gtk.MessageType.ERROR)
             return
-        self.status.set_text(f"Perfil cargado: {name}")
+        self.set_status(f"Perfil cargado: {name}")
 
     def apply_profile(self, profile):
         self.sources = list(profile.get("sources", []))
@@ -554,10 +590,10 @@ class BackupWindow(Gtk.ApplicationWindow):
         self.excludes.get_buffer().set_text("\n".join(profile.get("excludes", [])))
 
     def open_mail_settings(self, _button):
-        dialog = Gtk.Dialog(title="Configuración de correo y SMTP", transient_for=self, modal=True)
-        dialog.add_button("Cancelar", Gtk.ResponseType.CANCEL)
-        dialog.add_button("Probar envío", 1)
-        dialog.add_button("Guardar", Gtk.ResponseType.ACCEPT)
+        dialog = _dialog(title="Configuración de correo y SMTP", transient_for=self, modal=True)
+        dialog.add_button(tr("Cancelar"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(tr("Probar envío"), 1)
+        dialog.add_button(tr("Guardar"), Gtk.ResponseType.ACCEPT)
         dialog.set_default_response(Gtk.ResponseType.ACCEPT)
         box = dialog.get_content_area()
         box.set_spacing(8)
@@ -568,11 +604,11 @@ class BackupWindow(Gtk.ApplicationWindow):
         grid = Gtk.Grid(column_spacing=10, row_spacing=8)
         box.append(grid)
         def field(row, label, widget):
-            grid.attach(Gtk.Label(label=label, xalign=0), 0, row, 1, 1)
+            grid.attach(_label(label=label, xalign=0), 0, row, 1, 1)
             widget.set_hexpand(True)
             grid.attach(widget, 1, row, 1, 1)
         current = self.mail
-        connection = Gtk.DropDown.new_from_strings([
+        connection = _dropdown([
             "SMTP local (localhost)", "SMTP externo", "sendmail / msmtp del sistema"
         ])
         if current.get("MAIL_METODO") == "local":
@@ -583,14 +619,14 @@ class BackupWindow(Gtk.ApplicationWindow):
             connection.set_selected(1)
         field(0, "Servidor de envío", connection)
         recipients = Gtk.Entry()
-        recipients.set_placeholder_text("persona@ejemplo.com, otra@ejemplo.com")
+        recipients.set_placeholder_text(tr("persona@ejemplo.com, otra@ejemplo.com"))
         recipients.set_text(current.get("MAIL_A", ""))
         field(1, "Destinatarios", recipients)
         sender = Gtk.Entry()
-        sender.set_placeholder_text("backup@este-equipo")
+        sender.set_placeholder_text(tr("backup@este-equipo"))
         sender.set_text(current.get("MAIL_DE", ""))
         field(2, "Remitente", sender)
-        policy = Gtk.DropDown.new_from_strings(["No enviar", "Después de cada backup", "Solo si falla"])
+        policy = _dropdown(["No enviar", "Después de cada backup", "Solo si falla"])
         policy.set_selected({"nunca": 0, "siempre": 1, "error": 2}.get(current.get("MAIL_ENVIAR", "nunca"), 0))
         field(3, "Enviar los logs", policy)
         host = Gtk.Entry()
@@ -600,7 +636,7 @@ class BackupWindow(Gtk.ApplicationWindow):
         port.set_input_purpose(Gtk.InputPurpose.DIGITS)
         port.set_text(current.get("SMTP_PORT", "25"))
         field(5, "Puerto", port)
-        tls = Gtk.DropDown.new_from_strings(["Sin cifrado", "STARTTLS", "SSL/TLS"])
+        tls = _dropdown(["Sin cifrado", "STARTTLS", "SSL/TLS"])
         tls.set_selected({"none": 0, "starttls": 1, "ssl": 2}.get(current.get("SMTP_TLS", "none"), 0))
         field(6, "Cifrado", tls)
         username = Gtk.Entry()
@@ -608,14 +644,14 @@ class BackupWindow(Gtk.ApplicationWindow):
         field(7, "Usuario (opcional)", username)
         password = Gtk.Entry()
         password.set_visibility(False)
-        password.set_placeholder_text("Vacío = conservar contraseña guardada")
+        password.set_placeholder_text(tr("Vacío = conservar contraseña guardada"))
         field(8, "Contraseña", password)
-        clear_password = Gtk.CheckButton(label="Eliminar contraseña SMTP guardada")
+        clear_password = _check_button(label="Eliminar contraseña SMTP guardada")
         grid.attach(clear_password, 1, 9, 1, 1)
-        hint = Gtk.Label(label="Para SMTP local usa localhost:25 y sin cifrado. Para SMTP externo elige STARTTLS (587) o SSL/TLS (465). La contraseña se guarda con permisos de usuario 600.", xalign=0, wrap=True)
+        hint = _label(label="Para SMTP local usa localhost:25 y sin cifrado. Para SMTP externo elige STARTTLS (587) o SSL/TLS (465). La contraseña se guarda con permisos de usuario 600.", xalign=0, wrap=True)
         hint.add_css_class("dim-label")
         box.append(hint)
-        result_label = Gtk.Label(label="", xalign=0, wrap=True)
+        result_label = _label(label="", xalign=0, wrap=True)
         box.append(result_label)
         controls = {"connection": connection, "recipients": recipients, "sender": sender, "policy": policy,
                     "host": host, "port": port, "tls": tls, "username": username, "password": password,
@@ -661,11 +697,11 @@ class BackupWindow(Gtk.ApplicationWindow):
             self.test_mail(controls["result_label"])
         else:
             dialog.destroy()
-            self.status.set_text("Configuración de correo guardada")
+            self.set_status("Configuración de correo guardada")
 
     def test_mail(self, result_label):
-        result_label.set_text("Enviando prueba…")
-        self.status.set_text("Enviando correo de prueba…")
+        result_label.set_text(tr("Enviando prueba…"))
+        self.set_status("Enviando correo de prueba…")
         command = [str(BACKEND), "-C", str(CONFIG_DIR), "-t"]
         def worker():
             try:
@@ -676,10 +712,10 @@ class BackupWindow(Gtk.ApplicationWindow):
         threading.Thread(target=worker, daemon=True).start()
 
     def open_schedule_settings(self, _button):
-        dialog = Gtk.Dialog(title="Programar copias automáticas", transient_for=self, modal=True)
-        dialog.add_button("Cerrar", Gtk.ResponseType.CANCEL)
-        dialog.add_button("Desactivar programación", 2)
-        dialog.add_button("Guardar y activar", Gtk.ResponseType.ACCEPT)
+        dialog = _dialog(title="Programar copias automáticas", transient_for=self, modal=True)
+        dialog.add_button(tr("Cerrar"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(tr("Desactivar programación"), 2)
+        dialog.add_button(tr("Guardar y activar"), Gtk.ResponseType.ACCEPT)
         dialog.set_default_response(Gtk.ResponseType.ACCEPT)
         box = dialog.get_content_area()
         box.set_spacing(10)
@@ -689,18 +725,18 @@ class BackupWindow(Gtk.ApplicationWindow):
         box.set_margin_end(14)
         grid = Gtk.Grid(column_spacing=10, row_spacing=9)
         box.append(grid)
-        frequency = Gtk.DropDown.new_from_strings(["Cada N horas", "Cada día", "Cada semana"])
+        frequency = _dropdown(["Cada N horas", "Cada día", "Cada semana"])
         existing = self.schedule
         frequency.set_selected({"hours": 0, "daily": 1, "weekly": 2}.get(existing.get("frequency", "daily"), 1))
-        grid.attach(Gtk.Label(label="Frecuencia", xalign=0), 0, 0, 1, 1)
+        grid.attach(_label(label="Frecuencia", xalign=0), 0, 0, 1, 1)
         grid.attach(frequency, 1, 0, 2, 1)
         interval = Gtk.SpinButton.new_with_range(1, 168, 1)
         interval.set_value(int(existing.get("interval", 6)))
-        grid.attach(Gtk.Label(label="Intervalo (para horas)", xalign=0), 0, 1, 1, 1)
+        grid.attach(_label(label="Intervalo (para horas)", xalign=0), 0, 1, 1, 1)
         grid.attach(interval, 1, 1, 1, 1)
-        weekday = Gtk.DropDown.new_from_strings(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
+        weekday = _dropdown(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
         weekday.set_selected(int(existing.get("weekday", 0)))
-        grid.attach(Gtk.Label(label="Día (para semana)", xalign=0), 0, 2, 1, 1)
+        grid.attach(_label(label="Día (para semana)", xalign=0), 0, 2, 1, 1)
         grid.attach(weekday, 1, 2, 1, 1)
         hour = Gtk.SpinButton.new_with_range(0, 23, 1)
         minute = Gtk.SpinButton.new_with_range(0, 59, 1)
@@ -708,11 +744,11 @@ class BackupWindow(Gtk.ApplicationWindow):
         minute.set_value(int(existing.get("minute", 0)))
         time_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         time_row.append(hour)
-        time_row.append(Gtk.Label(label=":"))
+        time_row.append(_label(label=":"))
         time_row.append(minute)
-        grid.attach(Gtk.Label(label="Hora (para día/semana)", xalign=0), 0, 3, 1, 1)
+        grid.attach(_label(label="Hora (para día/semana)", xalign=0), 0, 3, 1, 1)
         grid.attach(time_row, 1, 3, 1, 1)
-        note = Gtk.Label(label="La programación instala un temporizador systemd del sistema para que los backups se ejecuten como root aunque la app esté cerrada. Requiere autorización administrativa.", xalign=0, wrap=True)
+        note = _label(label="La programación instala un temporizador systemd del sistema para que los backups se ejecuten como root aunque la app esté cerrada. Requiere autorización administrativa.", xalign=0, wrap=True)
         note.add_css_class("dim-label")
         box.append(note)
         controls = {"frequency": frequency, "interval": interval, "weekday": weekday, "hour": hour, "minute": minute}
@@ -852,7 +888,7 @@ class BackupWindow(Gtk.ApplicationWindow):
             SCHEDULE_FILE.unlink(missing_ok=True)
             self.schedule = {}
             self.update_schedule_status()
-            self.status.set_text("Programación desactivada")
+            self.set_status("Programación desactivada")
         except (OSError, RuntimeError, subprocess.SubprocessError) as error:
             self.show_message("No se pudo desactivar", str(error), Gtk.MessageType.ERROR)
 
@@ -860,22 +896,27 @@ class BackupWindow(Gtk.ApplicationWindow):
         if not hasattr(self, "status"):
             return
         if not self.schedule:
-            self.status.set_text("Listo · sin programación automática")
+            self.set_status("Listo · sin programación automática")
             return
         freq = self.schedule.get("frequency")
         if freq == "hours":
-            description = f"cada {self.schedule.get('interval', 1)} h"
+            description = f"{tr('cada')} {self.schedule.get('interval', 1)} h"
         else:
             description = f"{self.schedule.get('hour', 2):02d}:{self.schedule.get('minute', 0):02d}"
             if freq == "weekly":
-                description = "semanal · " + description
+                description = tr("semanal · ") + description
             else:
-                description = "diario · " + description
-        self.status.set_text(f"Programación activa: {description}")
+                description = tr("diario · ") + description
+        self.set_status(f"Programación activa: {description}")
+
+    def set_status(self, text):
+        self.status.set_text(tr(text))
 
     def show_message(self, title, text, message_type=Gtk.MessageType.INFO):
-        dialog = Gtk.Dialog(title=title, transient_for=self, modal=True)
-        dialog.add_button("Aceptar", Gtk.ResponseType.OK)
+        title = tr(title)
+        text = tr(text)
+        dialog = _dialog(title=title, transient_for=self, modal=True)
+        dialog.add_button(tr("Aceptar"), Gtk.ResponseType.OK)
         dialog.set_default_response(Gtk.ResponseType.OK)
         content = dialog.get_content_area()
         content.set_spacing(8)
@@ -883,23 +924,23 @@ class BackupWindow(Gtk.ApplicationWindow):
         content.set_margin_bottom(14)
         content.set_margin_start(16)
         content.set_margin_end(16)
-        heading = Gtk.Label(label=title, xalign=0)
+        heading = _label(label=title, xalign=0)
         heading.add_css_class("title-3")
         if message_type == Gtk.MessageType.ERROR:
             heading.add_css_class("error")
         elif message_type == Gtk.MessageType.WARNING:
             heading.add_css_class("warning")
         content.append(heading)
-        details = Gtk.Label(label=text, xalign=0, wrap=True, selectable=True)
+        details = _label(label=text, xalign=0, wrap=True, selectable=True)
         details.set_max_width_chars(72)
         content.append(details)
         dialog.connect("response", lambda d, _r: d.destroy())
         dialog.present()
 
     def confirm(self, summary, callback):
-        dialog = Gtk.Dialog(title="Confirmar backup", transient_for=self, modal=True)
-        dialog.add_button("Cancelar", Gtk.ResponseType.NO)
-        dialog.add_button("Iniciar backup", Gtk.ResponseType.YES)
+        dialog = _dialog(title="Confirmar backup", transient_for=self, modal=True)
+        dialog.add_button(tr("Cancelar"), Gtk.ResponseType.NO)
+        dialog.add_button(tr("Iniciar backup"), Gtk.ResponseType.YES)
         dialog.set_default_response(Gtk.ResponseType.NO)
         content = dialog.get_content_area()
         content.set_spacing(8)
@@ -907,8 +948,8 @@ class BackupWindow(Gtk.ApplicationWindow):
         content.set_margin_bottom(14)
         content.set_margin_start(16)
         content.set_margin_end(16)
-        content.append(Gtk.Label(label="Confirma los parámetros antes de iniciar:", xalign=0))
-        details = Gtk.Label(label=summary, xalign=0, wrap=True, selectable=True)
+        content.append(_label(label="Confirma los parámetros antes de iniciar:", xalign=0))
+        details = _label(label=summary, xalign=0, wrap=True, selectable=True)
         details.set_max_width_chars(76)
         content.append(details)
         dialog.connect("response", lambda d, response: (d.destroy(), callback(response == Gtk.ResponseType.YES)))
@@ -936,9 +977,9 @@ class BackupWindow(Gtk.ApplicationWindow):
                 self.show_message("Destino inválido", f"El destino no puede estar dentro del origen:\n{source}", Gtk.MessageType.ERROR)
                 return
         mode = "rsync" if self.mode.get_selected() == 0 else "tar"
-        summary = ("El motor de copia se ejecutará con permisos de root.\n\n"
-                   "Se iniciará el backup de:\n\n" + "\n".join(sources) +
-                   f"\n\nDestino: {dest}\nModo: {mode}\nRetención: {retention} días")
+        summary = (tr("El motor de copia se ejecutará con permisos de root.") + "\n\n"
+                   + tr("Se iniciará el backup de:") + "\n\n" + "\n".join(sources) +
+                   f"\n\n{tr('Destino:')} {dest}\n{tr('Modo:')} {mode}\n{tr('Retención:')} {retention} {tr('días')}")
         self.confirm(summary, lambda accepted: self.run_confirmed_backup(accepted, sources, dest, retention, mode))
 
     def run_confirmed_backup(self, accepted, sources, dest, retention, mode):
@@ -980,11 +1021,11 @@ class BackupWindow(Gtk.ApplicationWindow):
         if os.geteuid() != 0:
             cmd.insert(0, shutil.which("pkexec"))
         self.append_log("\n" + "=" * 70 + "\n")
-        self.status.set_text("Ejecutando backup…")
+        self.set_status("Ejecutando backup…")
         self.run_button.set_sensitive(False)
         self.cancel_button.set_sensitive(True)
         self.running = True
-        self.progress.set_text("En curso")
+        self.progress.set_text(tr("En curso"))
         self.progress.pulse()
         GLib.timeout_add(120, self.pulse_progress)
         threading.Thread(target=self.run_process, args=(cmd,), daemon=True).start()
@@ -1011,16 +1052,16 @@ class BackupWindow(Gtk.ApplicationWindow):
     def cancel_backup(self, _button):
         if self.running and self.stopfile:
             Path(self.stopfile).touch()
-            self.status.set_text("Cancelando…")
+            self.set_status("Cancelando…")
             self.cancel_button.set_sensitive(False)
 
     def exit_app(self, _button):
         if not self.running:
             self.get_application().quit()
             return
-        dialog = Gtk.Dialog(title="Backup en curso", transient_for=self, modal=True)
-        dialog.add_button("Seguir con el backup", Gtk.ResponseType.CANCEL)
-        dialog.add_button("Cancelar backup y salir", Gtk.ResponseType.ACCEPT)
+        dialog = _dialog(title="Backup en curso", transient_for=self, modal=True)
+        dialog.add_button(tr("Seguir con el backup"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(tr("Cancelar backup y salir"), Gtk.ResponseType.ACCEPT)
         dialog.set_default_response(Gtk.ResponseType.CANCEL)
         content = dialog.get_content_area()
         content.set_spacing(8)
@@ -1028,7 +1069,7 @@ class BackupWindow(Gtk.ApplicationWindow):
         content.set_margin_bottom(14)
         content.set_margin_start(16)
         content.set_margin_end(16)
-        content.append(Gtk.Label(label="Hay una copia ejecutándose. Puedes dejarla continuar o cancelarla antes de cerrar la aplicación.", xalign=0, wrap=True))
+        content.append(_label(label="Hay una copia ejecutándose. Puedes dejarla continuar o cancelarla antes de cerrar la aplicación.", xalign=0, wrap=True))
         def on_response(current, response):
             current.destroy()
             if response == Gtk.ResponseType.ACCEPT:
@@ -1058,9 +1099,9 @@ class BackupWindow(Gtk.ApplicationWindow):
                 elif kind == "mailtest":
                     code, output, result_label = value
                     self.append_log("\n--- Prueba de correo ---\n" + output + "\n")
-                    result_label.set_text("Envío de prueba correcto." if code == 0 else f"Falló la prueba: {output.strip()}")
+                    result_label.set_text(tr("Envío de prueba correcto.") if code == 0 else tr(f"Falló la prueba: {output.strip()}"))
                     result_label.add_css_class("success" if code == 0 else "error")
-                    self.status.set_text("Prueba SMTP completada" if code == 0 else "Falló la prueba SMTP")
+                    self.set_status("Prueba SMTP completada" if code == 0 else "Falló la prueba SMTP")
         except queue.Empty:
             pass
         return GLib.SOURCE_CONTINUE
@@ -1078,13 +1119,13 @@ class BackupWindow(Gtk.ApplicationWindow):
             except FileNotFoundError:
                 pass
         if code == 0:
-            self.status.set_text("Backup completado")
+            self.set_status("Backup completado")
         elif code == 130:
-            self.status.set_text("Backup cancelado")
+            self.set_status("Backup cancelado")
         elif code == 126:
-            self.status.set_text("No se concedió la autorización de administrador")
+            self.set_status("No se concedió la autorización de administrador")
         else:
-            self.status.set_text(f"Backup finalizado con errores (código {code})")
+            self.set_status(f"Backup finalizado con errores (código {code})")
         if self.exit_after_backup:
             self.get_application().quit()
 
