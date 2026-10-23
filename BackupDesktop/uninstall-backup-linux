@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+APP_DIR="$HOME/.local/opt/backup-linux"
+BIN_DIR="$HOME/.local/bin"
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/backup-desktop"
+APP_MENU_DIR="$DATA_HOME/applications"
+ICON_DIR="$DATA_HOME/icons/hicolor/scalable/apps"
+SERVICE="/etc/systemd/system/backup-desktop.service"
+TIMER="/etc/systemd/system/backup-desktop.timer"
+SYSTEMCTL="$(command -v systemctl 2>/dev/null || true)"
+PKEXEC="$(command -v pkexec 2>/dev/null || true)"
+RM="$(command -v rm 2>/dev/null || true)"
+
+desktop_dir="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
+if [[ -z "${XDG_DESKTOP_DIR:-}" ]] && command -v xdg-user-dir >/dev/null 2>&1; then
+    desktop_dir="$(xdg-user-dir DESKTOP)"
+    [[ -n "$desktop_dir" ]] || desktop_dir="$HOME/Desktop"
+fi
+
+message() {
+    local title="$1" text="$2" type="${3:-info}"
+    if command -v zenity >/dev/null 2>&1; then
+        if [[ "$type" == error ]]; then zenity --error --title="$title" --text="$text" 2>/dev/null || true
+        else zenity --info --title="$title" --text="$text" 2>/dev/null || true; fi
+    elif command -v kdialog >/dev/null 2>&1; then
+        if [[ "$type" == error ]]; then kdialog --error "$text" --title "$title" 2>/dev/null || true
+        else kdialog --msgbox "$text" --title "$title" 2>/dev/null || true; fi
+    elif command -v python3 >/dev/null 2>&1 && python3 -c 'import tkinter' >/dev/null 2>&1; then
+        python3 -c 'import sys, tkinter as tk; from tkinter import messagebox; root=tk.Tk(); root.withdraw(); (messagebox.showerror if sys.argv[3] == "error" else messagebox.showinfo)(sys.argv[1], sys.argv[2]); root.destroy()' "$title" "$text" "$type" 2>/dev/null || printf '%s: %s\n' "$title" "$text" >&2
+    else
+        printf '%s: %s\n' "$title" "$text" >&2
+    fi
+}
+
+confirm() {
+    local title="$1" text="$2"
+    if command -v zenity >/dev/null 2>&1; then
+        zenity --question --title="$title" --text="$text" 2>/dev/null
+    elif command -v kdialog >/dev/null 2>&1; then
+        kdialog --yesno "$text" --title "$title" 2>/dev/null
+    elif command -v python3 >/dev/null 2>&1 && python3 -c 'import tkinter' >/dev/null 2>&1; then
+        python3 -c 'import sys, tkinter as tk; from tkinter import messagebox; root=tk.Tk(); root.withdraw(); answer=messagebox.askyesno(sys.argv[1], sys.argv[2]); root.destroy(); sys.exit(0 if answer else 1)' "$title" "$text"
+    elif [[ -t 0 ]]; then
+        printf '%s\n' "$text"
+        read -r -p '¿Eliminar la aplicación y toda su configuración? [s/N] ' answer
+        [[ "$answer" =~ ^([sS]|[sS][iI])$ ]]
+    else
+        message "$title" "No hay un diálogo de confirmación disponible. Ejecuta el desinstalador desde una terminal para confirmar la eliminación." error
+        return 2
+    fi
+}
+
+admin() {
+    if ((EUID == 0)); then
+        "$@"
+    elif [[ -n "$PKEXEC" ]]; then
+        "$PKEXEC" "$@"
+    else
+        message "Falta PolicyKit" "No se puede retirar el timer de sistema sin pkexec. Instala PolicyKit o elimina manualmente /etc/systemd/system/backup-desktop.timer y backup-desktop.service." error
+        return 1
+    fi
+}
+
+if ! confirm "Desinstalar Backup Linux" \
+    "Se eliminarán la aplicación, los perfiles, la programación y la configuración SMTP. Las copias de seguridad guardadas en tus destinos no se borrarán. Esta acción no se puede deshacer."; then
+    exit 0
+fi
+
+if [[ -e "$SERVICE" || -e "$TIMER" ]]; then
+    if [[ -z "$SYSTEMCTL" ]]; then
+        message "No se puede retirar la programación" "No se encontró systemctl para detener el timer. No se borró la aplicación ni la configuración." error
+        exit 1
+    fi
+    if ! admin "$SYSTEMCTL" disable --now backup-desktop.timer; then
+        message "No se pudo detener la programación" "La autorización fue cancelada o systemd no pudo detener el timer. No se borró la aplicación ni la configuración." error
+        exit 1
+    fi
+    if ! admin "$RM" -f -- "$SERVICE" "$TIMER"; then
+        message "No se pudieron retirar las unidades" "La autorización fue cancelada. No se borró la aplicación ni la configuración." error
+        exit 1
+    fi
+    if ! admin "$SYSTEMCTL" daemon-reload; then
+        message "No se pudo actualizar systemd" "No se borró la aplicación ni la configuración. Revisa el estado de systemd." error
+        exit 1
+    fi
+fi
+
+rm -rf -- "$APP_DIR" "$CONFIG_DIR"
+rm -f -- "$BIN_DIR/backup-desktop" "$BIN_DIR/uninstall-backup-linux" \
+    "$APP_MENU_DIR/backup-linux.desktop" "$APP_MENU_DIR/backup-linux-uninstall.desktop" \
+    "$ICON_DIR/backup-linux.svg" "$desktop_dir/Backup Linux.desktop"
+command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APP_MENU_DIR" >/dev/null 2>&1 || true
+message "Desinstalación completada" "Se eliminaron Backup Linux y toda su configuración. Las copias de seguridad almacenadas en sus destinos se conservaron."

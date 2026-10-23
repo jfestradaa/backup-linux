@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Backup Linux
+Comment=Crear y gestionar copias de seguridad
+Exec=backup-desktop
+Icon=backup-linux
+Terminal=false
+Categories=System;Utility;GTK;
+StartupNotify=true
