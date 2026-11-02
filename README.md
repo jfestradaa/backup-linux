@@ -23,7 +23,7 @@ The downloaded installer can also start the uninstallation process using `--unin
 
 From the directory, run `./build-installer.sh`. It generates `BackupLinux-Installer.run`, the single file distributed to users. It includes the application source code and installer, but downloads dependencies from the distribution's repositories to ensure compatibility between GTK, Python, PolicyKit, and the host system.
 
-##Command-line usage (CLI)
+## Command-line usage (CLI)
 The backup.sh file can also be run from a terminal without opening GTK. Messages and help are shown in Spanish when the session locale starts with es, and in English for other languages. The script checks LC_ALL, LC_MESSAGES, LANG, and then LANGUAGE. When installed, it is located at ~/.local/opt/backup-linux/backup.sh; when running from source, use the examples from the BackupDesktop directory.
 To view the installed CLI help, run ~/.local/opt/backup-linux/backup.sh -h. In the examples below, replace ./backup.sh with that path when running an installed copy.
 
