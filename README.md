@@ -23,6 +23,29 @@ The downloaded installer can also start the uninstallation process using `--unin
 
 From the directory, run `./build-installer.sh`. It generates `BackupLinux-Installer.run`, the single file distributed to users. It includes the application source code and installer, but downloads dependencies from the distribution's repositories to ensure compatibility between GTK, Python, PolicyKit, and the host system.
 
+##Command-line usage (CLI)
+The backup.sh file can also be run from a terminal without opening GTK. Messages and help are shown in Spanish when the session locale starts with es, and in English for other languages. The script checks LC_ALL, LC_MESSAGES, LANG, and then LANGUAGE. When installed, it is located at ~/.local/opt/backup-linux/backup.sh; when running from source, use the examples from the BackupDesktop directory.
+To view the installed CLI help, run ~/.local/opt/backup-linux/backup.sh -h. In the examples below, replace ./backup.sh with that path when running an installed copy.
+
+<img width="902" height="503" alt="image" src="https://github.com/user-attachments/assets/833243ca-6d50-43b7-8892-7641a185f030" />
+
+# Open the text-based interface (requires dialog or whiptail)
+./backup.sh
+
+# Run a backup directly, without an interface
+./backup.sh -y -d "$HOME/Documents" -d "$HOME/Pictures" \
+  -o "/mnt/backups" -m rsync -r 30
+
+# Use tar and retain all backups
+./backup.sh -y -d "$HOME/Documents" -o "/mnt/backups" -m tar -r 0
+
+# List CLI profiles, or load one and execute it without an interface
+./backup.sh -l
+./backup.sh -y -c servidor
+
+# Send a test email using the CLI email configuration
+./backup.sh -t
+
 ## Usage
 
 1. Add the source folders and select or create a destination folder.
